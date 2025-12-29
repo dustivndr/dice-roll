@@ -1,0 +1,16 @@
+= TEMPLATE =
+************
+
+    +---+
+    | 1 |
+    +---+
+
+ > Roll the dice
+   Exit
+
+************
+note:
+1. The number doesn't just shows up right after click, make animation to simulate dice rolls
+   (try look up at the C++ version as template)
+2. > is moved by clicking up and down arrow
+************
