@@ -52,9 +52,9 @@ public class Dice {
     public int diceValue = 1;
     public boolean roll = true;
     public void showDice() {
-        System.out.println("+---+");
-        System.out.println("| " + diceValue + " |");
-        System.out.println("+---+");
+        System.out.println("\n    +---+");
+        System.out.println("    | " + diceValue + " |");
+        System.out.println("    +---+\n");
     }
 
     public void shakeDice() {
