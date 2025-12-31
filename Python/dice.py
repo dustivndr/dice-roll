@@ -16,7 +16,7 @@ def clear_screen():
 def show_dice(value):
     print('    +---+')
     print(f'    | {value} |')
-    print('    +---+')
+    print('    +---+\n')
 
 def display(dice, state):
     clear_screen()
