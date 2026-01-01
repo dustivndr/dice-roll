@@ -14,7 +14,7 @@ def clear_screen():
     system(f'{'cls' if name == 'nt' else 'clear'}')
 
 def show_dice(value):
-    print('    +---+')
+    print('\n    +---+')
     print(f'    | {value} |')
     print('    +---+\n')
 
