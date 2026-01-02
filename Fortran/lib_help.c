@@ -1,6 +1,8 @@
 #include <conio.h>
 #include <windows.h>
 
+// Things Fortran can't
+
 char getch_wrapper() {
     return _getch();
 }

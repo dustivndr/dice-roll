@@ -25,7 +25,7 @@
 
 cls
 echo Building C wrapper...
-gcc -c getch_wrapper.c -o getch_wrapper.o
+gcc -c lib_help.c -o lib_help.o
 
 if %errorlevel% neq 0 (
     echo C build failed!
@@ -34,7 +34,7 @@ if %errorlevel% neq 0 (
 )
 
 echo Creating library...
-ar rcs libgetch.a getch_wrapper.o
+ar rcs libhelp.a lib_help.o
 
 if %errorlevel% neq 0 (
     echo Library creation failed!
@@ -43,7 +43,7 @@ if %errorlevel% neq 0 (
 )
 
 echo Building Fortran program...
-gfortran main.f90 libgetch.a -o main.exe
+gfortran main.f90 libhelp.a -o main.exe
 
 if %errorlevel% neq 0 (
     echo Build failed!
