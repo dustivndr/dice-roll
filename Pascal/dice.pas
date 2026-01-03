@@ -9,6 +9,7 @@ var
 
 procedure ShowDice(val: Integer);
 begin
+  Writeln('');
   Writeln('    +---+');
   Writeln('    | ', val, ' |');
   Writeln('    +---+');
