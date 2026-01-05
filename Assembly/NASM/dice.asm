@@ -38,7 +38,7 @@ main:
 	mov     ebp, esp
 
 	; Seed rand(time(0))
-	push    dword 0         ; push NULL arg
+	push    dword 0          ; push NULL arg
 	call    time             ; returns current unix timestamp in eax
 	add     esp, 4           ; clean stack
 	push    eax              ; push timestamp as seed
@@ -77,9 +77,9 @@ handle_arrow:
 	mov     bh, [keybuf+2]   ; load 3rd byte of key sequence into BH
 	cmp     bl, '['          ; check if 2nd char is '[' (valid arrow)
 	jne     main_loop        ; if not, ignore
-	cmp     bh, 'A'         ; Up arrow code is ESC[A
+	cmp     bh, 'A'          ; Up arrow code is ESC[A
 	je      toggle_opt
-	cmp     bh, 'B'         ; Down arrow code is ESC[B
+	cmp     bh, 'B'          ; Down arrow code is ESC[B
 	je      toggle_opt
 	jmp     main_loop
 
@@ -170,21 +170,21 @@ shake_dice:
 	; Animate rolling: 5..14 iterations with sleep
 	push    ebp
 	mov     ebp, esp
-	sub     esp, 4          ; local: counter at [ebp-4]
+	sub     esp, 4           ; local: counter at [ebp-4]
 
 	call    rand             ; get random number in EAX
 	mov     ebx, 10          ; divisor = 10
 	cdq                      ; sign extend EAX to EDX:EAX
 	idiv    ebx              ; EAX = EAX/10, EDX = EAX%10
-	lea     ecx, [edx+5]     ; ECX = (rand%10) + 5 = 5..14 iterations
+	lea     ecx, [edx+5]     ; ECX = (rand % 10) + 5 = 5..14 iterations
 	mov     [ebp-4], ecx     ; store in local counter
 
 shake_loop:
-	call    rand              ; get random number in EAX
+	call    rand             ; get random number in EAX
 	mov     ebx, 6           ; divisor = 6
 	cdq                      ; sign extend EAX to EDX:EAX
 	idiv    ebx              ; EAX = EAX/6, EDX = EAX%6
-	inc     edx              ; EDX = (rand%6) + 1 = dice 1..6
+	inc     edx              ; EDX = (rand % 6) + 1 = dice 1..6
 	mov     [diceValue], edx ; store new random value
 
 	call    clear_screen
@@ -196,7 +196,7 @@ shake_loop:
 	call    printf
 	add     esp, 4
 
-	push    dword 100000    ; 100ms in microseconds (100,000 µs)
+	push    dword 100000     ; 100ms
 	call    usleep           ; sleep for 100ms
 	add     esp, 4           ; clean stack
 

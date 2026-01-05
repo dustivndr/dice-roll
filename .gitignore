@@ -60,3 +60,6 @@
 *.zip
 *.tar.gz
 *.rar
+
+# Binary
+dice
