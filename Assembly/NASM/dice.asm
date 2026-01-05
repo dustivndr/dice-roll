@@ -38,12 +38,12 @@ main:
 	mov     ebp, esp
 
 	; Seed rand(time(0))
-	push    dword 0
-	call    time
-	add     esp, 4
-	push    eax
-	call    srand
-	add     esp, 4
+	push    dword 0         ; push NULL arg
+	call    time             ; returns current unix timestamp in eax
+	add     esp, 4           ; clean stack
+	push    eax              ; push timestamp as seed
+	call    srand            ; seed the random generator
+	add     esp, 4           ; clean stack
 
 	; Put terminal in raw mode (no echo, no buffering)
 	push    raw_cmd
@@ -62,30 +62,30 @@ main_loop:
 	; Wait for key
 	call    read_key
 
-	cmp     al, 27          ; ESC sequence for arrows
+	cmp     al, 27          ; ESC sequence for arrows (27 is escape char)
 	je      handle_arrow
 
-	cmp     al, 10          ; LF
+	cmp     al, 10          ; LF (line feed / newline)
 	je      handle_enter
-	cmp     al, 13          ; CR
+	cmp     al, 13          ; CR (carriage return / enter)
 	je      handle_enter
 	jmp     main_loop
 
 handle_arrow:
 	; Parse ESC [ A/B for up/down
-	mov     bl, [keybuf+1]
-	mov     bh, [keybuf+2]
-	cmp     bl, '['
-	jne     main_loop
-	cmp     bh, 'A'         ; Up
+	mov     bl, [keybuf+1]   ; load 2nd byte of key sequence into BL
+	mov     bh, [keybuf+2]   ; load 3rd byte of key sequence into BH
+	cmp     bl, '['          ; check if 2nd char is '[' (valid arrow)
+	jne     main_loop        ; if not, ignore
+	cmp     bh, 'A'         ; Up arrow code is ESC[A
 	je      toggle_opt
-	cmp     bh, 'B'         ; Down
+	cmp     bh, 'B'         ; Down arrow code is ESC[B
 	je      toggle_opt
 	jmp     main_loop
 
 toggle_opt:
 	; Flip selection
-	xor     dword [rollFlag], 1
+	xor     dword [rollFlag], 1  ; toggle rollFlag between 0 and 1
 	jmp     main_loop
 
 handle_enter:
@@ -109,12 +109,12 @@ read_key:
 	; read(0, keybuf, 3) -> AL = first byte
 	push    ebp
 	mov     ebp, esp
-	push    dword 3
-	push    keybuf
-	push    dword 0
-	call    read
-	add     esp, 12
-	mov     al, [keybuf]
+	push    dword 3          ; 3rd arg: count = 3 bytes
+	push    keybuf           ; 2nd arg: buffer address
+	push    dword 0          ; 1st arg: fd = 0 (stdin)
+	call    read             ; read up to 3 bytes from stdin
+	add     esp, 12          ; clean stack (3 args × 4 bytes)
+	mov     al, [keybuf]     ; load first byte into AL (return value)
 	leave
 	ret
 
@@ -132,8 +132,8 @@ show_dice:
 	; printf dice ASCII art with value
 	push    ebp
 	mov     ebp, esp
-	push    dword [diceValue]
-	push    dice_fmt
+	push    dword [diceValue]  ; 2nd arg: current dice value
+	push    dice_fmt           ; 1st arg: format string
 	call    printf
 	add     esp, 8
 	leave
@@ -170,22 +170,22 @@ shake_dice:
 	; Animate rolling: 5..14 iterations with sleep
 	push    ebp
 	mov     ebp, esp
-	sub     esp, 4          ; local: counter
+	sub     esp, 4          ; local: counter at [ebp-4]
 
-	call    rand
-	mov     ebx, 10
-	cdq
-	idiv    ebx             ; edx = rand % 10
-	lea     ecx, [edx+5]    ; 5..14 iterations
-	mov     [ebp-4], ecx
+	call    rand             ; get random number in EAX
+	mov     ebx, 10          ; divisor = 10
+	cdq                      ; sign extend EAX to EDX:EAX
+	idiv    ebx              ; EAX = EAX/10, EDX = EAX%10
+	lea     ecx, [edx+5]     ; ECX = (rand%10) + 5 = 5..14 iterations
+	mov     [ebp-4], ecx     ; store in local counter
 
 shake_loop:
-	call    rand
-	mov     ebx, 6
-	cdq
-	idiv    ebx             ; edx = rand % 6
-	inc     edx
-	mov     [diceValue], edx
+	call    rand              ; get random number in EAX
+	mov     ebx, 6           ; divisor = 6
+	cdq                      ; sign extend EAX to EDX:EAX
+	idiv    ebx              ; EAX = EAX/6, EDX = EAX%6
+	inc     edx              ; EDX = (rand%6) + 1 = dice 1..6
+	mov     [diceValue], edx ; store new random value
 
 	call    clear_screen
 	call    show_dice
@@ -196,11 +196,11 @@ shake_loop:
 	call    printf
 	add     esp, 4
 
-	push    dword 100000    ; 100ms
-	call    usleep
-	add     esp, 4
+	push    dword 100000    ; 100ms in microseconds (100,000 µs)
+	call    usleep           ; sleep for 100ms
+	add     esp, 4           ; clean stack
 
-	dec     dword [ebp-4]
+	dec     dword [ebp-4]    ; decrement loop counter
 	jnz     shake_loop
 
 	leave
