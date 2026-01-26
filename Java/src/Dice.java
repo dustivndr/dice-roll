@@ -1,39 +1,47 @@
 import java.awt.event.*;
-import javax.swing.JFrame;
+import java.util.concurrent.TimeUnit;
 
 public class Dice {
     public static int getCh() {
-        final JFrame frame = new JFrame();
-        final int[] keyHolder = new int[1]; // mutable holder
+        final int[] keyHolder = new int[1];
+        final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
 
-        synchronized (frame) {
-            frame.setUndecorated(true);
-            frame.setSize(1, 1);
-            frame.setLocationRelativeTo(null);
-            frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        try {
+            javax.swing.SwingUtilities.invokeAndWait(() -> {
+                javax.swing.JDialog dialog = new javax.swing.JDialog();
+                dialog.setUndecorated(true);
+                dialog.setSize(1, 1);
+                dialog.setLocationRelativeTo(null);
+                dialog.setDefaultCloseOperation(javax.swing.JDialog.DO_NOTHING_ON_CLOSE);
 
-            frame.addKeyListener(new KeyListener() {
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    synchronized (frame) {
+                dialog.addKeyListener(new KeyListener() {
+                    @Override
+                    public void keyPressed(KeyEvent e) {
                         keyHolder[0] = e.getKeyCode();
-                        frame.setVisible(false);
-                        frame.dispose();
-                        frame.notify();
+                        dialog.setVisible(false);
+                        dialog.dispose();
+                        latch.countDown();
                     }
-                }
-
-                @Override public void keyReleased(KeyEvent e) {}
-                @Override public void keyTyped(KeyEvent e) {}
+                    @Override public void keyReleased(KeyEvent e) {}
+                    @Override public void keyTyped(KeyEvent e) {}
+                });
+                dialog.setVisible(true);
+                dialog.toFront();
+                dialog.requestFocus();
             });
 
-            frame.setVisible(true);
-
-            try {
-                frame.wait();
-            } catch (InterruptedException ignored) {}
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Interrupted while waiting for key input.");
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            System.err.println("Invocation error while waiting for key input: " + cause);
+            if (cause != null) {
+                System.err.println("Stack trace:");
+                cause.printStackTrace(System.err);
+            }
         }
-
         return keyHolder[0];
     }
 
@@ -59,17 +67,17 @@ public class Dice {
 
     public void shakeDice() {
         int n = (int)(Math.random() * 10 + 5);
-        for (int i = 0; i < n; i++)
-        {
+        for (int i = 0; i < n; i++) {
             diceValue = (int)(Math.random() * 6 + 1);
             clearScreen();
             showDice();
             System.out.println(" > Rolling the dice...");
             System.out.println("   Exit");
             try {
-                Thread.sleep(100);
+                TimeUnit.MILLISECONDS.sleep(100);
             } catch (InterruptedException e) {
-                System.exit(0);
+                Thread.currentThread().interrupt();
+                break;
             }
         }
         currentState = State.DICE;
@@ -86,28 +94,22 @@ public class Dice {
 
     public void handleInput(int inp) {
         switch (inp) {
-            case KeyEvent.VK_ENTER: 
-                currentState = roll ? State.ROLL : State.EXIT;
-                return;
-
-            case KeyEvent.VK_W:
-            case KeyEvent.VK_S:
-            case KeyEvent.VK_UP:
-            case KeyEvent.VK_DOWN:
+            case KeyEvent.VK_ENTER -> currentState = roll ? State.ROLL : State.EXIT;
+            case KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_UP, KeyEvent.VK_DOWN -> {
                 roll = !roll;
                 currentState = State.DICE;
-                return;
-
-            default: return;
+            }
         }
     }
 
     public void start() {
         while (true) { 
             clearScreen();
-            if (currentState == State.DICE) diceMenu();
-            else if (currentState == State.ROLL) shakeDice();
-            else if (currentState == State.EXIT) System.exit(0);
+            switch (currentState) {
+                case DICE -> diceMenu();
+                case ROLL -> shakeDice();
+                case EXIT -> System.exit(0);
+            }
         }
     }
 
